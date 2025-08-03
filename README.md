@@ -33,8 +33,8 @@ text
 
 ## 🚀 How to Use
 1. **Part 1**: Run `python sku_mapper.py` for batch processing
-2. **Part 2**: Access Baserow dashboard at [your-link]
-3. **Part 3**: Deploy web app or view code in Part3_Web_App/
+2. **Part 2**: Access Baserow dashboard at https://baserow.io/dashboard/268908
+3. **Part 3**: Deploy web app or view code in Part3_Web_App/ Check out vercel deployment for already deployed version
 4. **Part 4**: Use AI queries in web interface
 
 ## 📈 Performance Metrics
@@ -51,6 +51,7 @@ text
 
 ## 👨‍💻 Development Process
 Built using AI-assisted development with ChatGPT and v0.dev for rapid prototyping and implementation.
+
 
 
 
