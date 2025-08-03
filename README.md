@@ -47,10 +47,11 @@ text
 - **Data Quality**: 90.4% overall mapping accuracy
 
 ## 🎥 Demo Video
-[Link to your Loom video]
+https://www.loom.com/share/8f004cd0868944f0910ad35b1d2d2a92
 
 ## 👨‍💻 Development Process
 Built using AI-assisted development with ChatGPT and v0.dev for rapid prototyping and implementation.
+
 
 
 
