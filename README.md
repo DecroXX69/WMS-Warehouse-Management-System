@@ -1,5 +1,3 @@
-﻿# WMS-Warehouse-Management-System
-
 # WMS - Warehouse Management System
 
 ## 🎯 Project Overview
@@ -48,3 +46,4 @@ text
 
 ## 👨‍💻 Development Process
 Built using AI-assisted development with ChatGPT and v0.dev for rapid prototyping and implementation.
+
