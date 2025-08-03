@@ -47,7 +47,6 @@ export default function WMSApplication() {
   const [processingComplete, setProcessingComplete] = useState(false)
   const [aiResponse, setAiResponse] = useState<string>("")
 
-
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()
     setIsDragOver(true)
@@ -89,7 +88,7 @@ export default function WMSApplication() {
     }
 
     // Generate results based on ACTUAL uploaded files
-    const actualFileResults: FileStats[] = files.map((file, index) => {
+    const actualFileResults: FileStats[] = files.map((file) => {
       // Simulate different success rates based on filename patterns
       let successRate = 90.4; // default
       let totalSKUs = Math.floor(Math.random() * 100) + 50; // random between 50-150
@@ -118,16 +117,16 @@ export default function WMSApplication() {
     // Generate sample processed data based on uploaded files
     const mockProcessedData: ProcessedData[] = files.flatMap((file, fileIndex) => {
       const numSamples = Math.min(6, Math.floor(Math.random() * 4) + 3); // 3-6 samples per file
-      return Array.from({ length: numSamples }, (_, index) => {
+      return Array.from({ length: numSamples }, (_, sampleIndex) => {
         const isUnmapped = Math.random() < 0.1; // 10% unmapped rate
         const isDirect = Math.random() > 0.5;
         
         return {
           filename: file.name,
-          fnsku: `X00${fileIndex}${index}${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
+          fnsku: `X00${fileIndex}${sampleIndex}${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
           asin: `B0${Math.random().toString(36).substr(2, 8).toUpperCase()}`,
           msku: isUnmapped ? "" : `${Math.floor(Math.random() * 90000000) + 10000000}`,
-          title: `Sample Product ${String.fromCharCode(65 + fileIndex)}${index + 1}`,
+          title: `Sample Product ${String.fromCharCode(65 + fileIndex)}${sampleIndex + 1}`,
           quantity: Math.floor(Math.random() * 10) + 1,
           mappingStatus: isUnmapped ? "UNMAPPED" : (isDirect ? "DIRECT_MSKU" : "MAPPED"),
           sourceFile: file.name
@@ -190,7 +189,7 @@ export default function WMSApplication() {
     const csvContent = [
       "FNSKU,ASIN,MSKU,Title,Quantity,Mapping_Status,Source_File",
       ...processedData.map((row) => 
-        `${row.fnsku},${row.asin},${row.msku},"${row.title}",${row.quantity},${row.mappingStatus},${row.sourceFile}`
+        `${row.fnsku},${row.asin},${row.msku},${JSON.stringify(row.title)},${row.quantity},${row.mappingStatus},${row.sourceFile}`
       ),
     ].join("\n")
 
@@ -217,19 +216,19 @@ export default function WMSApplication() {
   }
 
   const handleAIQuery = (query: string) => {
-  const lowerQuery = query.toLowerCase();
-  
-  if (!stats || !fileStats.length) {
-    setAiResponse("No data available. Please process some files first.");
-    return;
-  }
-  
-  if (lowerQuery.includes("unmapped") || lowerQuery.includes("needs attention")) {
-    const unmappedCount = stats.totalSKUs - stats.successfullyMapped;
-    const unmappedFiles = fileStats.filter(f => f.successRate < 100);
-    const unmappedDetails = unmappedFiles.map(f => `${f.filename}: ${f.totalSKUs - f.mappedSKUs} unmapped SKUs`);
+    const lowerQuery = query.toLowerCase();
     
-    setAiResponse(`🔍 Unmapped SKUs Analysis:
+    if (!stats || !fileStats.length) {
+      setAiResponse("No data available. Please process some files first.");
+      return;
+    }
+    
+    if (lowerQuery.includes("unmapped") || lowerQuery.includes("needs attention")) {
+      const unmappedCount = stats.totalSKUs - stats.successfullyMapped;
+      const unmappedFiles = fileStats.filter(f => f.successRate < 100);
+      const unmappedDetails = unmappedFiles.map(f => `${f.filename}: ${f.totalSKUs - f.mappedSKUs} unmapped SKUs`);
+      
+      setAiResponse(`🔍 Unmapped SKUs Analysis:
     
 📊 Total unmapped SKUs: ${unmappedCount} out of ${stats.totalSKUs}
 📈 Unmapped rate: ${((unmappedCount / stats.totalSKUs) * 100).toFixed(1)}%
@@ -238,12 +237,12 @@ export default function WMSApplication() {
 ${unmappedDetails.join('\n')}
 
 💡 Recommendation: Focus on improving mapping for Order files which show lower success rates.`);
-  }
-  else if (lowerQuery.includes("success rate") || lowerQuery.includes("performance")) {
-    const bestFiles = fileStats.filter(f => f.successRate === 100);
-    const poorFiles = fileStats.filter(f => f.successRate < 80);
-    
-    setAiResponse(`📊 Success Rate Analysis:
+    }
+    else if (lowerQuery.includes("success rate") || lowerQuery.includes("performance")) {
+      const bestFiles = fileStats.filter(f => f.successRate === 100);
+      const poorFiles = fileStats.filter(f => f.successRate < 80);
+      
+      setAiResponse(`📊 Success Rate Analysis:
     
 🎯 Overall Success Rate: ${stats.mappingSuccessRate}%
 ✅ Successfully Mapped: ${stats.successfullyMapped} / ${stats.totalSKUs} SKUs
@@ -255,9 +254,9 @@ ${bestFiles.map(f => `• ${f.filename}: ${f.totalSKUs} SKUs`).join('\n')}
 ${poorFiles.length > 0 ? poorFiles.map(f => `• ${f.filename}: ${f.successRate}% (${f.mappedSKUs}/${f.totalSKUs})`).join('\n') : 'None - All files performing well!'}
 
 💡 Analysis: ${bestFiles.length}/${fileStats.length} files achieved perfect mapping.`);
-  }
-  else if (lowerQuery.includes("summary") || lowerQuery.includes("total") || lowerQuery.includes("overview")) {
-    setAiResponse(`📋 Complete Processing Summary:
+    }
+    else if (lowerQuery.includes("summary") || lowerQuery.includes("total") || lowerQuery.includes("overview")) {
+      setAiResponse(`📋 Complete Processing Summary:
     
 📈 Overall Performance:
 • Total SKUs Processed: ${stats.totalSKUs}
@@ -271,24 +270,24 @@ ${fileStats.map(f => `• ${f.filename}: ${f.successRate}% (${f.mappedSKUs}/${f.
 
 🎯 System Status: ${stats.mappingSuccessRate >= 90 ? 'Excellent performance!' : stats.mappingSuccessRate >= 70 ? 'Good performance with room for improvement.' : 'Performance needs optimization.'}
 🔧 Reference Database: 3,843 SKU mappings loaded`);
-  }
-  else if (lowerQuery.includes("best") || lowerQuery.includes("top") || lowerQuery.includes("perfect")) {
-    const bestFiles = fileStats.filter(f => f.successRate === 100);
-    const topFile = fileStats.reduce((prev, current) => (prev.successRate > current.successRate) ? prev : current);
-    
-    setAiResponse(`🏆 Top Performing Files Analysis:
+    }
+    else if (lowerQuery.includes("best") || lowerQuery.includes("top") || lowerQuery.includes("perfect")) {
+      const bestFiles = fileStats.filter(f => f.successRate === 100);
+      const topFile = fileStats.reduce((prev, current) => (prev.successRate > current.successRate) ? prev : current);
+      
+      setAiResponse(`🏆 Top Performing Files Analysis:
     
 ✨ Perfect Score Files (100% success):
 ${bestFiles.map(f => `• ${f.filename}: ${f.totalSKUs} SKUs perfectly mapped`).join('\n')}
 
 📈 Highest Success Rate: ${topFile.filename} (${topFile.successRate}%)
 📊 Largest Dataset: ${fileStats.reduce((prev, current) => (prev.totalSKUs > current.totalSKUs) ? prev : current).filename}
-⚡ Processing Pattern: Files with "FK" in name show consistently perfect results
+⚡ Processing Pattern: Files with FK in name show consistently perfect results
 
 💡 Best Practice: Your fulfillment center (FK) files are optimally formatted for mapping.`);
-  }
-  else if (lowerQuery.includes("chart") || lowerQuery.includes("add") || lowerQuery.includes("new field")) {
-    setAiResponse(`🔧 Advanced Analytics Available:
+    }
+    else if (lowerQuery.includes("chart") || lowerQuery.includes("add") || lowerQuery.includes("new field")) {
+      setAiResponse(`🔧 Advanced Analytics Available:
     
 📊 Available Chart Types:
 • Success Rate by File (Bar Chart)
@@ -308,28 +307,27 @@ ${bestFiles.map(f => `• ${f.filename}: ${f.totalSKUs} SKUs perfectly mapped`).
 • Bottleneck identification
 • Optimization recommendations
 
-🚀 Next Steps: Choose specific charts or metrics you'd like to analyze further.`);
-  }
-  else {
-    setAiResponse(`🤖 AI Assistant Ready! I can analyze your WMS data using natural language.
+🚀 Next Steps: Choose specific charts or metrics you would like to analyze further.`);
+    }
+    else {
+      setAiResponse(`🤖 AI Assistant Ready! I can analyze your WMS data using natural language.
 
 💬 Try asking about:
-• "Show unmapped SKUs" - Detailed analysis of items needing attention
-• "Success rate by file" - Performance breakdown and insights  
-• "Total processing summary" - Complete overview with recommendations
-• "Best performing files" - Top files and success patterns
-• "Add charts for mapping trends" - Available visualization options
+• Show unmapped SKUs - Detailed analysis of items needing attention
+• Success rate by file - Performance breakdown and insights  
+• Total processing summary - Complete overview with recommendations
+• Best performing files - Top files and success patterns
+• Add charts for mapping trends - Available visualization options
 
 📊 Current Dataset: ${stats.totalSKUs} SKUs across ${stats.filesProcessed} files with ${stats.mappingSuccessRate}% success rate.
 
 Type your question above or click the quick action buttons! 🚀`);
-  }
-  
-  // Clear input after query
-  const input = document.getElementById('ai-query-input') as HTMLInputElement;
-  if (input) input.value = '';
-};
-
+    }
+    
+    // Clear input after query
+    const input = document.getElementById('ai-query-input') as HTMLInputElement;
+    if (input) input.value = '';
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
@@ -554,110 +552,108 @@ Type your question above or click the quick action buttons! 🚀`);
             </Card>
           )}
 
+          {/* AI Query Section - Part 4 */}
+          {processingComplete && (
+            <Card className="bg-gradient-to-r from-purple-50 to-indigo-50 border-2 border-purple-200">
+              <CardHeader>
+                <CardTitle className="text-purple-900 flex items-center gap-2">
+                  🤖 AI Data Query Layer (Part 4)
+                  <Badge className="bg-purple-100 text-purple-800">Natural Language Processing</Badge>
+                </CardTitle>
+                <CardDescription>
+                  Ask questions about your processed data using natural language queries
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Ask about your data: Show unmapped SKUs or What is the success rate?"
+                      className="flex-1 px-4 py-3 border rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                      id="ai-query-input"
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          handleAIQuery((e.target as HTMLInputElement).value);
+                        }
+                      }}
+                    />
+                    <Button 
+                      onClick={() => {
+                        const input = document.getElementById('ai-query-input') as HTMLInputElement;
+                        handleAIQuery(input.value);
+                      }}
+                      className="bg-purple-600 hover:bg-purple-700 px-6"
+                    >
+                      🔍 Query
+                    </Button>
+                  </div>
+                  
+                  {/* Quick Query Buttons */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      className="text-purple-700 border-purple-300 hover:bg-purple-50"
+                      onClick={() => handleAIQuery("show unmapped SKUs")}
+                    >
+                      📋 Unmapped SKUs
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      className="text-purple-700 border-purple-300 hover:bg-purple-50"
+                      onClick={() => handleAIQuery("success rate by file")}
+                    >
+                      📊 Success Rates
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      className="text-purple-700 border-purple-300 hover:bg-purple-50"
+                      onClick={() => handleAIQuery("total processing summary")}
+                    >
+                      📈 Summary
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      className="text-purple-700 border-purple-300 hover:bg-purple-50"
+                      onClick={() => handleAIQuery("best performing files")}
+                    >
+                      🏆 Top Files
+                    </Button>
+                  </div>
+                  
+                  {aiResponse && (
+                    <div className="mt-4 p-4 bg-gradient-to-r from-purple-100 to-indigo-100 rounded-lg border border-purple-300">
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                          AI
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-medium text-purple-900 mb-2">AI Analysis Result:</h4>
+                          <div className="text-purple-800 whitespace-pre-wrap">{aiResponse}</div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Help Section */}
           {!uploadedFiles.length && !processingComplete && (
             <Alert className="bg-blue-50 border-blue-200">
               <AlertCircle className="h-4 w-4 text-blue-600" />
               <AlertDescription className="text-blue-800">
                 <strong>Your WMS System is Ready:</strong> Upload CSV files containing sales data with FNSKU, ASIN, and MSKU columns. 
-                The system uses your master database of 3,843 SKU mappings. Click "Show Demo Results" to see actual batch processing performance.
+                The system uses your master database of 3,843 SKU mappings. Click Show Demo Results to see actual batch processing performance.
               </AlertDescription>
             </Alert>
           )}
         </div>
-
-
-        {/* AI Query Section - Part 4 */}
-{processingComplete && (
-  <Card className="bg-gradient-to-r from-purple-50 to-indigo-50 border-2 border-purple-200">
-    <CardHeader>
-      <CardTitle className="text-purple-900 flex items-center gap-2">
-        🤖 AI Data Query Layer (Part 4)
-        <Badge className="bg-purple-100 text-purple-800">Natural Language Processing</Badge>
-      </CardTitle>
-      <CardDescription>
-        Ask questions about your processed data using natural language queries
-      </CardDescription>
-    </CardHeader>
-    <CardContent>
-      <div className="space-y-4">
-        <div className="flex gap-2">
-          <input
-            type="text"
-            placeholder="Ask about your data: 'Show unmapped SKUs' or 'What's the success rate?'"
-            className="flex-1 px-4 py-3 border rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-            id="ai-query-input"
-            onKeyPress={(e) => {
-              if (e.key === 'Enter') {
-                handleAIQuery((e.target as HTMLInputElement).value);
-              }
-            }}
-          />
-          <Button 
-            onClick={() => {
-              const input = document.getElementById('ai-query-input') as HTMLInputElement;
-              handleAIQuery(input.value);
-            }}
-            className="bg-purple-600 hover:bg-purple-700 px-6"
-          >
-            🔍 Query
-          </Button>
-        </div>
-        
-        {/* Quick Query Buttons */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-          <Button 
-            variant="outline" 
-            size="sm"
-            className="text-purple-700 border-purple-300 hover:bg-purple-50"
-            onClick={() => handleAIQuery("show unmapped SKUs")}
-          >
-            📋 Unmapped SKUs
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm"
-            className="text-purple-700 border-purple-300 hover:bg-purple-50"
-            onClick={() => handleAIQuery("success rate by file")}
-          >
-            📊 Success Rates
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm"
-            className="text-purple-700 border-purple-300 hover:bg-purple-50"
-            onClick={() => handleAIQuery("total processing summary")}
-          >
-            📈 Summary
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm"
-            className="text-purple-700 border-purple-300 hover:bg-purple-50"
-            onClick={() => handleAIQuery("best performing files")}
-          >
-            🏆 Top Files
-          </Button>
-        </div>
-        
-        {aiResponse && (
-          <div className="mt-4 p-4 bg-gradient-to-r from-purple-100 to-indigo-100 rounded-lg border border-purple-300">
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                AI
-              </div>
-              <div className="flex-1">
-                <h4 className="font-medium text-purple-900 mb-2">AI Analysis Result:</h4>
-                <div className="text-purple-800 whitespace-pre-wrap">{aiResponse}</div>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    </CardContent>
-  </Card>
-)}
-
       </main>
     </div>
   )
