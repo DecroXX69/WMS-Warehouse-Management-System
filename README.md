@@ -20,9 +20,13 @@ Vercel Deployment Link:  https://wms-warehouse-management-system-bzu.vercel.app/
 
 ## 📁 Project Structure
 ├── Part1_SKU_Mapper/ - Python GUI for batch processing
+
 ├── Part2_Database/ - Baserow dashboard with analytics
+
 ├── Part3_Web_App/ - Professional web interface
+
 ├── Part4_AI_Layer/ - Natural language query system
+
 └── processed_data/ - Output files and results
 
 text
@@ -47,5 +51,6 @@ text
 
 ## 👨‍💻 Development Process
 Built using AI-assisted development with ChatGPT and v0.dev for rapid prototyping and implementation.
+
 
 
